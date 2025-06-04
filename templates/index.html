@@ -87,19 +87,38 @@
         }
 
         .download-item {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255,255,255,0.7);
             border-radius: 10px;
             padding: 1rem;
             margin-bottom: 1rem;
             border-left: 4px solid var(--primary-color);
+            color: #222;
         }
-
+        body.dark-theme .download-item {
+            background: rgba(24,24,32,0.95);
+            color: #f8f9fa;
+        }
         .status-badge {
             font-size: 0.8rem;
             padding: 4px 8px;
             border-radius: 15px;
             font-weight: 600;
+            background: #e9ecef;
+            color: #222;
         }
+        body.dark-theme .status-badge {
+            background: #23243a;
+            color: #f8f9fa;
+        }
+        .download-item .btn-outline-light {
+            border-color: #007bff;
+            color: #007bff;
+        }
+        .download-item .btn-outline-light:hover {
+            background: #007bff;
+            color: #fff;
+        }
+        /* End improved download-item */
 
         .supported-sites {
             display: grid;
@@ -176,6 +195,99 @@
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
         }
+
+        .drag-over {
+            border: 2px dashed rgba(255, 255, 255, 0.7) !important;
+            background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        body.light-theme { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: #222 !important; }
+        body.dark-theme { background: linear-gradient(135deg, #23243a 0%, #181a20 100%) !important; color: #f8f9fa !important; }
+        .glass-card { backdrop-filter: blur(10px); background: rgba(255,255,255,0.2) !important; }
+        body.dark-theme .glass-card { background: rgba(24,24,32,0.85) !important; }
+        .nav-tabs .nav-link.active { background: #0d6efd; color: #fff; }
+        body.dark-theme .nav-tabs .nav-link.active { background: #222; color: #fff; }
+
+        .nav-tabs.nav-justified .nav-link {
+            border: none;
+            background: transparent;
+            color: #555;
+            transition: background 0.2s, color 0.2s;
+        }
+        .nav-tabs.nav-justified .nav-link.active {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(102,126,234,0.15);
+        }
+        body.dark-theme .nav-tabs.nav-justified .nav-link {
+            color: #bbb;
+        }
+        body.dark-theme .nav-tabs.nav-justified .nav-link.active {
+            background: linear-gradient(90deg, #23243a 0%, #181a20 100%);
+            color: #fff;
+        }
+        .nav-tabs.nav-justified .nav-link:not(.active):hover {
+            background: rgba(102,126,234,0.08);
+            color: #333;
+        }
+        body.dark-theme .nav-tabs.nav-justified .nav-link:not(.active):hover {
+            background: rgba(102,126,234,0.12);
+            color: #fff;
+        }
+
+        /* History value and label styles for better contrast */
+        .history-label {
+            color: #888;
+            font-size: 0.95em;
+        }
+        .history-value {
+            color: #222;
+            font-weight: 600;
+        }
+        body.dark-theme .history-value {
+            color: #fff;
+        }
+        body.dark-theme .history-label {
+            color: #bbb;
+        }
+        /* End history value styles */
+
+        /* YouTube search result card improvements */
+        .yt-search-card {
+            background: rgba(255,255,255,0.7);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(31,38,135,0.07);
+        }
+        .yt-search-thumb {
+            width: 120px;
+            height: 68px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 16px;
+            background: #eee;
+        }
+        .yt-search-title {
+            font-weight: 600;
+            color: #222;
+        }
+        .yt-search-meta {
+            color: #555;
+            font-size: 0.95em;
+        }
+        body.dark-theme .yt-search-card {
+            background: rgba(24,24,32,0.95);
+        }
+        body.dark-theme .yt-search-title {
+            color: #fff;
+        }
+        body.dark-theme .yt-search-meta {
+            color: #bbb;
+        }
+        /* End YouTube search result card improvements */
     </style>
 </head>
 <body>
@@ -190,121 +302,226 @@
                 <p class="text-light">Download videos from YouTube, Instagram, Twitter, TikTok, and 1000+ other sites</p>
             </div>
 
-            <!-- Main Download Form -->
-            <div class="glass-card">
-                <div class="row">
-                    <div class="col-md-8">
-                        <input type="url" 
-                               id="videoUrl" 
-                               class="form-control url-input" 
-                               placeholder="Paste your video URL here (YouTube, Instagram, Twitter, TikTok, etc.)"
-                               aria-label="Video URL">
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-tabs nav-justified mb-4 rounded-pill overflow-hidden shadow-sm" id="mainTabs" role="tablist" style="background:rgba(255,255,255,0.12); border:none;">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active d-flex align-items-center gap-2 py-3 fs-5 rounded-pill" id="tab-download" data-bs-toggle="tab" data-bs-target="#tabDownload" type="button" role="tab">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link d-flex align-items-center gap-2 py-3 fs-5 rounded-pill" id="tab-queue" data-bs-toggle="tab" data-bs-target="#tabQueue" type="button" role="tab">
+                        <i class="fas fa-tasks"></i> Queue
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link d-flex align-items-center gap-2 py-3 fs-5 rounded-pill" id="tab-history" data-bs-toggle="tab" data-bs-target="#tabHistory" type="button" role="tab">
+                        <i class="fas fa-history"></i> History
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link d-flex align-items-center gap-2 py-3 fs-5 rounded-pill" id="tab-settings" data-bs-toggle="tab" data-bs-target="#tabSettings" type="button" role="tab">
+                        <i class="fas fa-cog"></i> Settings
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content" id="mainTabsContent">
+                <div class="tab-pane fade show active" id="tabDownload" role="tabpanel">
+                    <!-- YouTube Search Section -->
+                    <div class="glass-card mb-4 p-4">
+                        <h4 class="mb-3 text-center">YouTube Search</h4>
+                        <div class="input-group mb-3">
+                            <input id="ytSearchInput" type="text" class="form-control" placeholder="Search YouTube videos..." aria-label="YouTube Search">
+                            <button id="ytSearchBtn" class="btn btn-primary" type="button"><i class="fas fa-search"></i> Search</button>
+                            <button id="ytClearBtn" class="btn btn-secondary" type="button"><i class="fas fa-times"></i> Clear</button>
+                        </div>
+                        <div id="ytQuickSuggestions" class="mb-2 d-flex flex-wrap gap-2 justify-content-center">
+                            <button class="btn btn-outline-info btn-sm">Music</button>
+                            <button class="btn btn-outline-info btn-sm">Tutorials</button>
+                            <button class="btn btn-outline-info btn-sm">News</button>
+                            <button class="btn btn-outline-info btn-sm">Podcasts</button>
+                            <button class="btn btn-outline-info btn-sm">Gaming</button>
+                        </div>
+                        <div id="ytSearchResults"></div>
                     </div>
-                    <div class="col-md-4 mt-3 mt-md-0">
-                        <div class="d-grid gap-2">
-                            <button id="getInfoBtn" class="btn btn-outline-light">
-                                <i class="fas fa-info-circle"></i> Get Info
-                            </button>
-                            <button id="downloadBtn" class="btn download-btn">
-                                <i class="fas fa-download"></i> Download
-                            </button>
+
+                    <!-- Main Download Form -->
+                    <div class="glass-card mb-4">
+                        <h4 class="mb-3 text-center">Direct Video Download</h4>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <input type="url" 
+                                       id="videoUrl" 
+                                       class="form-control url-input" 
+                                       placeholder="Paste your video URL here (YouTube, Instagram, Twitter, TikTok, etc.)"
+                                       aria-label="Video URL">
+                            </div>
+                            <div class="col-md-4 mt-3 mt-md-0">
+                                <div class="d-grid gap-2">
+                                    <button id="getInfoBtn" class="btn btn-outline-light">
+                                        <i class="fas fa-info-circle"></i> Get Info
+                                    </button>
+                                    <button id="downloadBtn" class="btn download-btn">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Format Selection -->
+                        <div class="format-selector">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="text-light mb-2">Download Type:</label>
+                                    <select id="formatType" class="form-select">
+                                        <option value="video">Video (Best Quality)</option>
+                                        <option value="audio">Audio Only (MP3)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Video Info Display -->
+                    <div id="videoInfo" class="video-info"></div>
+
+                    <!-- Progress Container -->
+                    <div id="progressContainer" class="progress-container">
+                        <div class="glass-card">
+                            <h5 class="text-light mb-3">Download Progress</h5>
+                            <div id="progressInfo" class="mb-3"></div>
+                            <div class="progress" style="height: 25px; border-radius: 12px;">
+                                <div id="progressBar" 
+                                     class="progress-bar progress-bar-custom" 
+                                     role="progressbar" 
+                                     style="width: 0%"
+                                     aria-valuenow="0" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                0%
+                                </div>
+                            </div>
+                            <div id="downloadStats" class="stats-grid mt-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- Batch Download & Media Tools -->
+                    <div class="glass-card mb-4 p-4">
+                        <h4 class="mb-3 text-center">Batch Download & Media Tools</h4>
+                        <div class="mb-2">
+                            <textarea id="batchUrls" class="form-control mb-2" rows="2" placeholder="Paste up to 10 video URLs, one per line..."></textarea>
+                            <div class="d-flex gap-2 mb-2">
+                                <button class="btn btn-primary" onclick="startBatchDownload()"><i class="fas fa-tasks"></i> Start Batch Download</button>
+                                <button class="btn btn-outline-secondary" onclick="clearBatchUrls()">Clear</button>
+                            </div>
+                            <div id="batchDropZone" class="p-2 border border-info rounded text-center mb-2" style="background:rgba(30,30,40,0.2);cursor:pointer;">Drag & drop a list of URLs here</div>
+                        </div>
+                        <div class="mb-2">
+                            <input id="mediaUrl" class="form-control mb-2" placeholder="Paste video URL for media tools...">
+                            <div class="d-flex gap-2 mb-2">
+                                <button class="btn btn-info" onclick="extractAudio()"><i class="fas fa-music"></i> Extract Audio (MP3)</button>
+                                <button class="btn btn-warning" onclick="downloadSubtitles()"><i class="fas fa-closed-captioning"></i> Download Subtitles</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Supported Sites -->
+                    <div class="glass-card mb-4">
+                        <h5 class="text-light mb-3">
+                            <i class="fas fa-globe"></i> Supported Platforms
+                        </h5>
+                        <p class="text-light">This downloader supports over 1000 websites including:</p>
+                        <div class="supported-sites">
+                            <div class="site-card">
+                                <i class="fab fa-youtube text-danger fa-2x mb-2"></i>
+                                <div class="text-light">YouTube</div>
+                            </div>
+                            <div class="site-card">
+                                <i class="fab fa-instagram text-warning fa-2x mb-2"></i>
+                                <div class="text-light">Instagram</div>
+                            </div>
+                            <div class="site-card">
+                                <i class="fab fa-twitter text-info fa-2x mb-2"></i>
+                                <div class="text-light">Twitter</div>
+                            </div>
+                            <div class="site-card">
+                                <i class="fab fa-tiktok text-light fa-2x mb-2"></i>
+                                <div class="text-light">TikTok</div>
+                            </div>
+                            <div class="site-card">
+                                <i class="fab fa-facebook text-primary fa-2x mb-2"></i>
+                                <div class="text-light">Facebook</div>
+                            </div>
+                            <div class="site-card">
+                                <i class="fab fa-vimeo text-success fa-2x mb-2"></i>
+                                <div class="text-light">Vimeo</div>
+                            </div>
+                            <div class="site-card">
+                                <i class="fab fa-twitch text-purple fa-2x mb-2"></i>
+                                <div class="text-light">Twitch</div>
+                            </div>
+                            <div class="site-card">
+                                <i class="fas fa-plus fa-2x mb-2"></i>
+                                <div class="text-light">1000+ More</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Format Selection -->
-                <div class="format-selector">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="text-light mb-2">Download Type:</label>
-                            <select id="formatType" class="form-select">
-                                <option value="video">Video (Best Quality)</option>
-                                <option value="audio">Audio Only (MP3)</option>
-                            </select>
+                <div class="tab-pane fade" id="tabQueue" role="tabpanel">
+                    <div class="glass-card p-3">
+                        <h5>Download Queue</h5>
+                        <div id="queueList"></div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="tabHistory" role="tabpanel">
+                    <div class="glass-card p-3">
+                        <h5>Download History</h5>
+                        <div class="mb-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="exportHistory('json')">Export JSON</button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="exportHistory('csv')">Export CSV</button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="clearHistory()">Clear History</button>
+                        </div>
+                        <div id="historyList"></div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="tabSettings" role="tabpanel">
+                    <div class="glass-card p-3">
+                        <h5>Settings</h5>
+                        <div class="mb-2">
+                            <label>Speed Limit (KB/s): <input id="speedLimitInput" type="number" min="0" class="form-control d-inline-block w-auto" style="width:120px;"></label>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="setSpeedLimit()">Set</button>
+                        </div>
+                        <div class="mb-2">
+                            <label>Theme:
+                                <select id="themeSelect" class="form-select d-inline-block w-auto" style="width:140px;">
+                                    <option value="auto">Auto</option>
+                                    <option value="light">Light</option>
+                                    <option value="dark">Dark</option>
+                                </select>
+                            </label>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Video Info Display -->
-            <div id="videoInfo" class="video-info"></div>
-
-            <!-- Progress Container -->
-            <div id="progressContainer" class="progress-container">
-                <div class="glass-card">
-                    <h5 class="text-light mb-3">Download Progress</h5>
-                    <div id="progressInfo" class="mb-3"></div>
-                    <div class="progress" style="height: 25px; border-radius: 12px;">
-                        <div id="progressBar" 
-                             class="progress-bar progress-bar-custom" 
-                             role="progressbar" 
-                             style="width: 0%"
-                             aria-valuenow="0" 
-                             aria-valuemin="0" 
-                             aria-valuemax="100">
-                            0%
-                        </div>
-                    </div>
-                    <div id="downloadStats" class="stats-grid mt-3"></div>
+            <!-- Contact & Feedback -->
+            <div class="glass-card mt-4 mb-3 p-3">
+                <h5 class="mb-2 text-center" style="color: #fff; letter-spacing: 1px;">Contact & Feedback</h5>
+                <div class="d-flex flex-wrap justify-content-center gap-3 mb-2">
+                    <a href="https://wa.me/233508597910" target="_blank" class="btn btn-success" style="min-width: 120px;"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                    <a href="https://twitter.com/roi_richie" target="_blank" class="btn btn-info text-white" style="min-width: 120px;"><i class="fab fa-twitter"></i> Twitter</a>
+                    <a href="https://instagram.com/richieroi" target="_blank" class="btn btn-danger" style="min-width: 120px;"><i class="fab fa-instagram"></i> Instagram</a>
+                    <a href="https://snapchat.com/add/richieroii" target="_blank" class="btn btn-warning text-dark" style="min-width: 120px;"><i class="fab fa-snapchat-ghost"></i> Snapchat</a>
+                    <a href="mailto:ce-rkopoku9823@st.umat.edu.gh" target="_blank" class="btn btn-secondary" style="min-width: 120px;"><i class="fas fa-envelope"></i> Email</a>
                 </div>
-            </div>
-
-            <!-- Download History -->
-            <div class="glass-card">
-                <h5 class="text-light mb-3">
-                    <i class="fas fa-history"></i> Recent Downloads
-                </h5>
-                <div id="downloadHistory"></div>
-            </div>
-
-            <!-- Supported Sites -->
-            <div class="glass-card">
-                <h5 class="text-light mb-3">
-                    <i class="fas fa-globe"></i> Supported Platforms
-                </h5>
-                <p class="text-light">This downloader supports over 1000 websites including:</p>
-                <div class="supported-sites">
-                    <div class="site-card">
-                        <i class="fab fa-youtube text-danger fa-2x mb-2"></i>
-                        <div class="text-light">YouTube</div>
-                    </div>
-                    <div class="site-card">
-                        <i class="fab fa-instagram text-warning fa-2x mb-2"></i>
-                        <div class="text-light">Instagram</div>
-                    </div>
-                    <div class="site-card">
-                        <i class="fab fa-twitter text-info fa-2x mb-2"></i>
-                        <div class="text-light">Twitter</div>
-                    </div>
-                    <div class="site-card">
-                        <i class="fab fa-tiktok text-light fa-2x mb-2"></i>
-                        <div class="text-light">TikTok</div>
-                    </div>
-                    <div class="site-card">
-                        <i class="fab fa-facebook text-primary fa-2x mb-2"></i>
-                        <div class="text-light">Facebook</div>
-                    </div>
-                    <div class="site-card">
-                        <i class="fab fa-vimeo text-success fa-2x mb-2"></i>
-                        <div class="text-light">Vimeo</div>
-                    </div>
-                    <div class="site-card">
-                        <i class="fab fa-twitch text-purple fa-2x mb-2"></i>
-                        <div class="text-light">Twitch</div>
-                    </div>
-                    <div class="site-card">
-                        <i class="fas fa-plus fa-2x mb-2"></i>
-                        <div class="text-light">1000+ More</div>
-                    </div>
+                <div class="text-center mt-2" style="color: #fff; font-size: 1.1rem;">
+                    Have feedback or want to reach out? <br> I'd love to hear from you!
                 </div>
             </div>
 
             <!-- Footer -->
-            <div class="text-center mt-4">
-                <p class="text-light">
-                    <i class="fas fa-shield-alt"></i>
-                    Safe, fast, and free video downloading from any supported platform
-                </p>
+            <div class="text-center mb-3" style="color: #fff; font-size: 1.1rem; letter-spacing: 1px;">
+                Made by Roi with <span style="color: #e25555;">&#10084;&#65039;</span>
             </div>
         </div>
     </div>
@@ -327,7 +544,11 @@
         const downloadHistory = document.getElementById('downloadHistory');
 
         // Event Listeners
-        downloadBtn.addEventListener('click', startDownload);
+        downloadBtn.addEventListener('click', async function() {
+            // Always fetch video info before allowing download
+            await getVideoInfo();
+            // The user must now click the Download button in the video info card, after selecting resolution
+        });
         getInfoBtn.addEventListener('click', getVideoInfo);
         
         // Load download history on page load
@@ -367,14 +588,47 @@
             }
         }
 
+        // Disable the main Download button until Get Info is done
         function displayVideoInfo(info) {
             const duration = info.duration ? formatDuration(info.duration) : 'Unknown';
             const viewCount = info.view_count ? formatNumber(info.view_count) : 'Unknown';
-            
+            let formatOptions = '';
+            if (info.formats && info.formats.length) {
+                formatOptions = `
+                    <div class="mb-2">
+                        <label class="text-light mb-1 fw-bold" style="font-size:1.1em;">
+                            <i class="fas fa-sliders-h"></i> Choose Resolution/Quality
+                            <span title="Select your preferred video or audio quality before downloading." style="cursor:help; color:#ffc107;">&#9432;</span>
+                        </label>
+                        <select id="resolutionSelect" class="form-select mb-2">
+                            ${info.formats.filter(f => f.vcodec !== 'none').map(f =>
+                                `<option value="${f.format_id}">
+                                    ${f.format_note || ''} ${f.resolution || ''} ${f.fps ? f.fps + 'fps' : ''} (${f.ext}${f.acodec !== 'none' ? ', audio' : ', video-only'}${f.filesize ? ', ' + formatBytes(f.filesize) : ''})
+                                </option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                `;
+            }
+            let playlistHtml = '';
+            if (info.entries && info.entries.length) {
+                playlistHtml = `<div class="mb-2"><strong class="text-light">Playlist Videos:</strong></div>` +
+                    '<div style="max-height:200px;overflow-y:auto;">' +
+                    info.entries.map((entry, idx) =>
+                        `<div class="form-check mb-1">
+                            <input class="form-check-input playlist-checkbox" type="checkbox" value="${entry.url}" id="playlistVid${idx}" checked>
+                            <label class="form-check-label text-light" for="playlistVid${idx}">
+                                ${entry.title || 'Untitled'}
+                            </label>
+                        </div>`
+                    ).join('') + '</div>';
+            }
+            // Always show an image, fallback to placeholder if missing or error
+            const thumbUrl = info.thumbnail ? info.thumbnail : 'https://via.placeholder.com/320x180?text=No+Thumbnail';
             videoInfo.innerHTML = `
                 <div class="row">
                     <div class="col-md-4">
-                        ${info.thumbnail ? `<img src="${info.thumbnail}" class="img-fluid rounded" alt="Thumbnail">` : ''}
+                        <img src="${thumbUrl}" class="img-fluid rounded" alt="Thumbnail" onerror="this.onerror=null;this.src='https://via.placeholder.com/320x180?text=No+Thumbnail';">
                     </div>
                     <div class="col-md-8">
                         <h6 class="text-light">${info.title || 'Unknown Title'}</h6>
@@ -383,14 +637,54 @@
                             <i class="fas fa-eye"></i> ${viewCount} views &nbsp;
                             <i class="fas fa-clock"></i> ${duration}
                         </p>
+                        ${formatOptions}
+                        ${playlistHtml}
                         <p class="text-light small">${info.description || 'No description available'}</p>
                         <p class="text-light small">
                             <i class="fas fa-globe"></i> Source: ${info.website || 'Unknown'}
                         </p>
+                        <button class="btn btn-success mt-2" onclick="startDownloadWithOptions()"><i class="fas fa-download"></i> Download</button>
                     </div>
                 </div>
             `;
             videoInfo.style.display = 'block';
+            downloadBtn.disabled = true;
+        }
+
+        async function startDownloadWithOptions() {
+            const url = videoUrlInput.value.trim();
+            if (!url) {
+                alert('Please enter a video URL');
+                return;
+            }
+            let format_id = null;
+            const resSelect = document.getElementById('resolutionSelect');
+            if (resSelect) format_id = resSelect.value;
+            // Check for playlist selection
+            const playlistChecks = document.querySelectorAll('.playlist-checkbox');
+            let playlistUrls = [];
+            playlistChecks.forEach(cb => { if (cb.checked) playlistUrls.push(cb.value); });
+            downloadBtn.disabled = true;
+            downloadBtn.innerHTML = '<span class="loading-spinner"></span> Starting...';
+            try {
+                let body = { url: url, format: formatType.value };
+                if (format_id) body.format_id = format_id;
+                if (playlistUrls.length > 0 && playlistUrls.length !== 1) body.playlist_urls = playlistUrls;
+                const response = await fetch('/api/start_download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                currentDownloadId = data.download_id;
+                showProgressContainer();
+                startProgressTracking();
+            } catch (error) {
+                alert('Error starting download: ' + error.message);
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
+            }
         }
 
         async function startDownload() {
@@ -460,6 +754,7 @@
                 updateProgressDisplay(data);
 
                 if (data.completed || data.error) {
+                    downloadBtn.disabled = false;
                     clearInterval(progressInterval);
                     progressInterval = null;
                     
@@ -490,6 +785,7 @@
 
             let statusText = '';
             let statusClass = 'text-info';
+            let cancelBtn = '';
 
             switch (data.status) {
                 case 'preparing':
@@ -503,6 +799,7 @@
                     break;
                 case 'downloading':
                     statusText = `Downloading: ${data.filename || 'Unknown'}`;
+                    cancelBtn = `<button class="btn btn-danger btn-sm ms-3" onclick="cancelDownload('${currentDownloadId}')"><i class="fas fa-times"></i> Cancel</button>`;
                     break;
                 case 'completed':
                     statusText = 'Download completed!';
@@ -514,7 +811,7 @@
                     break;
             }
 
-            progressInfo.innerHTML = `<div class="${statusClass}">${statusText}</div>`;
+            progressInfo.innerHTML = `<div class="d-flex align-items-center ${statusClass}">${statusText} ${cancelBtn}</div>`;
 
             // Update stats
             if (data.status === 'downloading') {
@@ -551,6 +848,7 @@
                     <i class="fas fa-download"></i> Download File
                 </a>
             `;
+            downloadBtn.disabled = false;
         }
 
         async function loadDownloadHistory() {
@@ -592,8 +890,8 @@
                     <div class="download-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <div class="text-light fw-bold">${download.title || download.filename || 'Unknown'}</div>
-                                <div class="text-light small">${download.filename || ''}</div>
+                                <div class="history-value fw-bold">${download.title || download.filename || 'Unknown'}</div>
+                                <div class="history-label small">${download.filename || ''}</div>
                             </div>
                             <div>
                                 ${statusBadge}
@@ -606,6 +904,155 @@
             }).join('');
 
             downloadHistory.innerHTML = historyHtml;
+        }
+
+        // --- YouTube Search Functionality ---
+        const ytSearchInput = document.getElementById('ytSearchInput');
+        const ytSearchBtn = document.getElementById('ytSearchBtn');
+        const ytClearBtn = document.getElementById('ytClearBtn');
+        const ytSearchResults = document.getElementById('ytSearchResults');
+        const ytQuickSuggestions = document.getElementById('ytQuickSuggestions');
+
+        ytSearchBtn.onclick = doYtSearch;
+        ytSearchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doYtSearch(); });
+        ytClearBtn.onclick = () => { ytSearchInput.value = ''; ytSearchResults.innerHTML = ''; };
+        ytQuickSuggestions.querySelectorAll('button').forEach(btn => {
+            btn.onclick = () => { ytSearchInput.value = btn.textContent; doYtSearch(); };
+        });
+
+        async function doYtSearch() {
+            const query = ytSearchInput.value.trim();
+            if (!query) return;
+            ytSearchResults.innerHTML = '<div class="text-center my-3"><span class="spinner-border"></span> Searching...</div>';
+            const res = await fetch('/api/search_youtube', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query})});
+            const data = await res.json();
+            if (data.results && data.results.length) {
+                ytSearchResults.innerHTML = data.results.map(video => `
+                    <div class='yt-search-card'>
+                        <img src='${video.thumbnail ? video.thumbnail : 'https://via.placeholder.com/120x68?text=No+Image'}' alt='thumb' class='yt-search-thumb' onerror="this.onerror=null;this.src='https://via.placeholder.com/120x68?text=No+Image';">
+                        <div class='flex-grow-1'>
+                            <div class='yt-search-title'>${video.title}</div>
+                            <div class='yt-search-meta'>${video.uploader || ''} &bull; ${video.duration || ''}s &bull; ${video.view_count || 0} views</div>
+                        </div>
+                        <button class='btn btn-success ms-2' onclick='startYtDownload("${video.url}")'><i class="fas fa-download"></i> Download</button>
+                    </div>
+                `).join('');
+            } else {
+                ytSearchResults.innerHTML = '<div class="text-center text-danger">No results found.</div>';
+            }
+        }
+        window.startYtDownload = async function(url) {
+            const res = await fetch('/api/start_download', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,format:'video'})});
+            const data = await res.json();
+            if (data.download_id) {
+                alert('Download started! Check the queue/history for progress.');
+            } else {
+                alert('Failed to start download.');
+            }
+        }
+
+        // --- Download Queue & History ---
+        async function refreshQueue() {
+            const res = await fetch('/api/my_downloads');
+            const data = await res.json();
+            const queueList = document.getElementById('queueList');
+            if (!data.downloads || !data.downloads.length) {
+                queueList.innerHTML = '<div class="text-muted">No active downloads.</div>';
+                return;
+            }
+            queueList.innerHTML = data.downloads.filter(d=>!d.completed).map(d => `
+                <div class='card mb-2 p-2 d-flex flex-row align-items-center' style='background:rgba(30,30,40,0.7);'>
+                    <div class='flex-grow-1'>
+                        <div class='history-value fw-bold'>${d.title || d.filename}</div>
+                        <div class='history-label small'>${d.status}</div>
+                    </div>
+                    <button class='btn btn-danger btn-sm ms-2' onclick='cancelDownload("${d.id}")'>Cancel</button>
+                </div>
+            `).join('');
+        }
+        async function refreshHistory() {
+            const res = await fetch('/api/my_downloads');
+            const data = await res.json();
+            const historyList = document.getElementById('historyList');
+            if (!data.downloads || !data.downloads.length) {
+                historyList.innerHTML = '<div class="text-muted">No download history.</div>';
+                return;
+            }
+            historyList.innerHTML = data.downloads.filter(d=>d.completed).map(d => `
+                <div class='card mb-2 p-2 d-flex flex-row align-items-center' style='background:rgba(30,30,40,0.7);'>
+                    <div class='flex-grow-1'>
+                        <div class='history-value fw-bold'>${d.title || d.filename}</div>
+                        <div class='history-label small'>${d.status}</div>
+                    </div>
+                    <a class='btn btn-success btn-sm ms-2' href='/api/download_file/${d.id}' download>Download</a>
+                    <button class='btn btn-warning btn-sm ms-2' onclick='retryDownload("${d.id}")'>Retry</button>
+                </div>
+            `).join('');
+        }
+        async function cancelDownload(id) {
+            await fetch('/api/cancel_download', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({download_id:id})});
+            refreshQueue();
+        }
+        async function retryDownload(id) {
+            // You may want to prompt for the original URL or store it in the backend
+            alert('Retry functionality coming soon!');
+        }
+        async function exportHistory(fmt) {
+            window.open(fmt==='json'?'/api/export_history_json':'/api/export_history_csv', '_blank');
+        }
+        async function clearHistory() {
+            await fetch('/api/clear_history', {method:'POST',headers:{'Content-Type':'application/json'}});
+            refreshHistory();
+        }
+        // Auto-refresh queue/history every 5 seconds
+        setInterval(refreshQueue, 5000);
+        setInterval(refreshHistory, 5000);
+        // Initial load
+        refreshQueue();
+        refreshHistory();
+
+        // --- Batch Download & Drag-and-Drop ---
+        function clearBatchUrls() { document.getElementById('batchUrls').value = ''; }
+        async function startBatchDownload() {
+            const urls = document.getElementById('batchUrls').value.split('\n').map(u=>u.trim()).filter(Boolean).slice(0,10);
+            if (!urls.length) return alert('Paste at least one URL.');
+            await fetch('/api/drag_and_drop', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls})});
+            alert('Batch download started! Check the queue for progress.');
+        }
+        // Drag-and-drop support
+        const batchDropZone = document.getElementById('batchDropZone');
+        batchDropZone.ondragover = e => { e.preventDefault(); batchDropZone.classList.add('drag-over'); };
+        batchDropZone.ondragleave = e => { batchDropZone.classList.remove('drag-over'); };
+        batchDropZone.ondrop = e => {
+            e.preventDefault();
+            batchDropZone.classList.remove('drag-over');
+            const text = e.dataTransfer.getData('text');
+            document.getElementById('batchUrls').value = text;
+        };
+        // --- Media Tools ---
+        async function extractAudio() {
+            const url = document.getElementById('mediaUrl').value.trim();
+            if (!url) return alert('Paste a video URL.');
+            const res = await fetch('/api/start_download', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,format:'audio'})});
+            const data = await res.json();
+            if (data.download_id) {
+                alert('Audio extraction started! Check the queue/history for progress.');
+            } else {
+                alert('Failed to start audio extraction.');
+            }
+        }
+        async function downloadSubtitles() {
+            const url = document.getElementById('mediaUrl').value.trim();
+            if (!url) return alert('Paste a video URL.');
+            const lang = prompt('Enter subtitle language code (e.g. en, fr, es):', 'en');
+            if (!lang) return;
+            const res = await fetch('/api/download_subtitles', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,language:lang})});
+            const data = await res.json();
+            if (data.message) {
+                alert('Subtitles downloaded (check downloads folder on server).');
+            } else {
+                alert('Failed to download subtitles.');
+            }
         }
 
         // Utility functions
@@ -654,6 +1101,74 @@
                 // Clipboard access failed, ignore
             }
         });
+
+        // Drag-and-Drop Support
+        const dropZone = document.body;
+
+        dropZone.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', async (event) => {
+            event.preventDefault();
+            dropZone.classList.remove('drag-over');
+
+            const url = event.dataTransfer.getData('text/plain');
+            if (url) {
+                videoUrlInput.value = url;
+                await startDownload();
+            } else {
+                alert('Please drop a valid URL.');
+            }
+        });
+
+        // --- Theme System ---
+        const themeSelect = document.getElementById('themeSelect');
+        // Load theme from localStorage or system
+        function applyTheme(theme) {
+            if (theme === 'auto') {
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.body.classList.add('dark-theme');
+                    document.body.classList.remove('light-theme');
+                } else {
+                    document.body.classList.add('light-theme');
+                    document.body.classList.remove('dark-theme');
+                }
+            } else if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+                document.body.classList.remove('light-theme');
+            } else {
+                document.body.classList.add('light-theme');
+                document.body.classList.remove('dark-theme');
+            }
+        }
+        function saveTheme(theme) {
+            localStorage.setItem('theme', theme);
+            applyTheme(theme);
+        }
+        themeSelect.value = localStorage.getItem('theme') || 'auto';
+        applyTheme(themeSelect.value);
+        themeSelect.onchange = () => saveTheme(themeSelect.value);
+        // Listen for system theme changes if auto
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if ((localStorage.getItem('theme') || 'auto') === 'auto') applyTheme('auto');
+        });
+        // Add improved glassmorphism CSS for themes
+        const style = document.createElement('style');
+        style.innerHTML = `
+        body.light-theme { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: #222 !important; }
+        body.dark-theme { background: linear-gradient(135deg, #23243a 0%, #181a20 100%) !important; color: #f8f9fa !important; }
+        .glass-card { backdrop-filter: blur(10px); background: rgba(255,255,255,0.2) !important; }
+        body.dark-theme .glass-card { background: rgba(24,24,32,0.85) !important; }
+        .nav-tabs .nav-link.active { background: #0d6efd; color: #fff; }
+        body.dark-theme .nav-tabs .nav-link.active { background: #222; color: #fff; }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
