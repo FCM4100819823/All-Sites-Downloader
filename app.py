@@ -28,6 +28,7 @@ app.start_time = time.time()
 # Global storage for download progress
 download_progress = {}
 download_history = {}
+download_threads = {}
 
 DOWNLOAD_FOLDER = os.path.join(os.getcwd(), 'downloads')
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
@@ -186,7 +187,9 @@ def start_download():
         except Exception as e:
             progress_obj.status = 'error'
             progress_obj.error = str(e)
-    executor.submit(run_download)
+    thread = threading.Thread(target=run_download)
+    thread.start()
+    download_threads[download_id] = thread
     
     # Store in session for user tracking
     if 'downloads' not in session:
@@ -671,6 +674,12 @@ def cancel_download():
     # Mark as cancelled
     progress_obj.status = 'cancelled'
     progress_obj.error = 'Download cancelled by user'
+    
+    thread = download_threads.get(download_id)
+    if thread and thread.is_alive():
+        # There is no safe way to kill a thread in Python, so we mark as cancelled
+        progress_obj.status = 'cancelled'
+        progress_obj.error = 'Download cancelled by user.'
     
     return jsonify({'message': 'Download cancelled', 'download_id': download_id})
 

@@ -500,6 +500,20 @@
                                 </select>
                             </label>
                         </div>
+                        <!-- --- Settings: Default Quality & Speed Limit --- -->
+                        <div class="mb-2">
+                            <label>Default Download Quality:
+                                <select id="qualitySelect" class="form-select d-inline-block w-auto ms-2" style="width:140px;">
+                                    <option value="best">Best</option>
+                                    <option value="1080p">1080p</option>
+                                    <option value="720p">720p</option>
+                                    <option value="480p">480p</option>
+                                    <option value="360p">360p</option>
+                                    <option value="audio">Audio Only</option>
+                                </select>
+                            </label>
+                        </div>
+                        <!-- End settings for quality and speed limit -->
                     </div>
                 </div>
             </div>
@@ -612,16 +626,23 @@
             }
             let playlistHtml = '';
             if (info.entries && info.entries.length) {
-                playlistHtml = `<div class="mb-2"><strong class="text-light">Playlist Videos:</strong></div>` +
-                    '<div style="max-height:200px;overflow-y:auto;">' +
-                    info.entries.map((entry, idx) =>
-                        `<div class="form-check mb-1">
-                            <input class="form-check-input playlist-checkbox" type="checkbox" value="${entry.url}" id="playlistVid${idx}" checked>
-                            <label class="form-check-label text-light" for="playlistVid${idx}">
-                                ${entry.title || 'Untitled'}
-                            </label>
-                        </div>`
-                    ).join('') + '</div>';
+                playlistHtml = `
+                    <div class="mb-2 d-flex align-items-center justify-content-between">
+                        <strong class="text-light">Playlist Videos:</strong>
+                        <label class="form-check-label text-light" style="font-size:0.95em;cursor:pointer;">
+                            <input type="checkbox" id="selectAllPlaylist" class="form-check-input me-1" checked> Select All
+                        </label>
+                    </div>
+                    <div style="max-height:200px;overflow-y:auto;">
+                        ${info.entries.map((entry, idx) =>
+                            `<div class="form-check mb-1">
+                                <input class="form-check-input playlist-checkbox" type="checkbox" value="${entry.url}" id="playlistVid${idx}" checked>
+                                <label class="form-check-label text-light" for="playlistVid${idx}">
+                                    ${entry.title || 'Untitled'}
+                                </label>
+                            </div>`
+                        ).join('')}
+                    </div>`;
             }
             // Always show an image, fallback to placeholder if missing or error
             const thumbUrl = info.thumbnail ? info.thumbnail : 'https://via.placeholder.com/320x180?text=No+Thumbnail';
@@ -839,15 +860,19 @@
 
         function showDownloadComplete() {
             const downloadUrl = `/api/download_file/${currentDownloadId}`;
-            
             progressInfo.innerHTML = `
                 <div class="text-success mb-3">
                     <i class="fas fa-check-circle"></i> Download completed successfully!
                 </div>
-                <a href="${downloadUrl}" class="btn btn-success">
+                <a id="autoDownloadLink" href="${downloadUrl}" class="btn btn-success" download>
                     <i class="fas fa-download"></i> Download File
                 </a>
             `;
+            // Auto-trigger download
+            setTimeout(() => {
+                const link = document.getElementById('autoDownloadLink');
+                if (link) link.click();
+            }, 500);
             downloadBtn.disabled = false;
         }
 
@@ -871,7 +896,6 @@
             const historyHtml = downloads.map(download => {
                 let statusBadge = '';
                 let statusClass = '';
-                
                 switch (download.status) {
                     case 'completed':
                         statusBadge = '<span class="badge bg-success status-badge">Completed</span>';
@@ -885,7 +909,6 @@
                     default:
                         statusBadge = '<span class="badge bg-secondary status-badge">Processing</span>';
                 }
-
                 return `
                     <div class="download-item">
                         <div class="d-flex justify-content-between align-items-center">
@@ -895,7 +918,8 @@
                             </div>
                             <div>
                                 ${statusBadge}
-                                ${download.completed ? `<a href="/api/download_file/${download.id}" class="btn btn-sm btn-outline-light ms-2"><i class="fas fa-download"></i></a>` : ''}
+                                ${download.completed ? `<a href="/api/download_file/${download.id}" class="btn btn-sm btn-outline-light ms-2"><i class="fas fa-download"></i></a>
+                                <button class="btn btn-outline-success btn-sm ms-2" onclick="uploadToDrive('${download.id}', this)"><i class='fab fa-google-drive'></i> Drive</button>` : ''}
                             </div>
                         </div>
                         ${download.error ? `<div class="text-danger small mt-2">${download.error}</div>` : ''}
@@ -904,6 +928,34 @@
             }).join('');
 
             downloadHistory.innerHTML = historyHtml;
+        }
+
+        async function uploadToDrive(downloadId, btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Uploading...';
+            try {
+                const res = await fetch(`/api/upload_drive/${downloadId}`);
+                const data = await res.json();
+                if (data.success) {
+                    btn.innerHTML = '<i class="fab fa-google-drive"></i> Uploaded!';
+                    btn.classList.remove('btn-outline-success');
+                    btn.classList.add('btn-success');
+                } else {
+                    btn.innerHTML = '<i class="fab fa-google-drive"></i> Failed';
+                    btn.classList.remove('btn-outline-success');
+                    btn.classList.add('btn-danger');
+                }
+            } catch (e) {
+                btn.innerHTML = '<i class="fab fa-google-drive"></i> Error';
+                btn.classList.remove('btn-outline-success');
+                btn.classList.add('btn-danger');
+            }
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fab fa-google-drive"></i> Drive';
+                btn.classList.remove('btn-success', 'btn-danger');
+                btn.classList.add('btn-outline-success');
+            }, 3000);
         }
 
         // --- YouTube Search Functionality ---
@@ -1033,26 +1085,70 @@
         async function extractAudio() {
             const url = document.getElementById('mediaUrl').value.trim();
             if (!url) return alert('Paste a video URL.');
-            const res = await fetch('/api/start_download', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,format:'audio'})});
+            // Fetch available audio formats
+            let formats = [];
+            try {
+                const res = await fetch('/api/video_info', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+                const data = await res.json();
+                if (data.formats) {
+                    formats = data.formats.filter(f => f.vcodec === 'none' && f.acodec !== 'none');
+                }
+            } catch (e) {}
+            let format_id = null;
+            if (formats.length > 0) {
+                const idx = prompt('Select audio quality (enter number):\n' + formats.map((f,i)=>`${i+1}. ${f.format_note || ''} ${f.abr ? f.abr+'kbps' : ''} (${f.ext})`).join('\n'));
+                const i = parseInt(idx)-1;
+                if (i >= 0 && i < formats.length) format_id = formats[i].format_id;
+            }
+            const res = await fetch('/api/start_download', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,format:'audio',format_id})});
             const data = await res.json();
             if (data.download_id) {
-                alert('Audio extraction started! Check the queue/history for progress.');
+                // Auto-download when ready
+                setTimeout(() => {
+                    window.location.href = `/api/download_file/${data.download_id}`;
+                }, 1000);
+                alert('Audio extraction started! Download will start automatically when ready.');
             } else {
                 alert('Failed to start audio extraction.');
             }
         }
+
         async function downloadSubtitles() {
             const url = document.getElementById('mediaUrl').value.trim();
             if (!url) return alert('Paste a video URL.');
-            const lang = prompt('Enter subtitle language code (e.g. en, fr, es):', 'en');
-            if (!lang) return;
+            // Fetch available subtitle languages
+            let subs = [];
+            try {
+                const res = await fetch('/api/video_info', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+                const data = await res.json();
+                if (data.subtitles) {
+                    subs = Object.keys(data.subtitles);
+                }
+            } catch (e) {}
+            let lang = 'en';
+            if (subs.length > 0) {
+                lang = prompt('Available subtitle languages:\n' + subs.join(', ') + '\nEnter language code:', subs.includes('en') ? 'en' : subs[0]);
+                if (!lang) return;
+            } else {
+                lang = prompt('Enter subtitle language code (e.g. en, fr, es):', 'en');
+                if (!lang) return;
+            }
             const res = await fetch('/api/download_subtitles', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,language:lang})});
             const data = await res.json();
-            if (data.message) {
+            if (data.download_id) {
+                setTimeout(() => {
+                    window.location.href = `/api/download_file/${data.download_id}`;
+                }, 1000);
+                alert('Subtitles download started! Download will start automatically when ready.');
+            } else if (data.message) {
                 alert('Subtitles downloaded (check downloads folder on server).');
             } else {
                 alert('Failed to download subtitles.');
             }
+        }
+
+        function showError(message) {
+            alert(message);
         }
 
         // Utility functions
@@ -1169,6 +1265,70 @@
         body.dark-theme .nav-tabs .nav-link.active { background: #222; color: #fff; }
         `;
         document.head.appendChild(style);
+
+        // --- Settings: Default Quality & Speed Limit ---
+        const speedLimitInput = document.getElementById('speedLimitInput');
+        const qualitySelect = document.createElement('select');
+        qualitySelect.className = 'form-select d-inline-block w-auto ms-2';
+        qualitySelect.style.width = '140px';
+        qualitySelect.innerHTML = `
+            <option value="best">Best</option>
+            <option value="1080p">1080p</option>
+            <option value="720p">720p</option>
+            <option value="480p">480p</option>
+            <option value="360p">360p</option>
+            <option value="audio">Audio Only</option>
+        `;
+        document.querySelector('#tabSettings .glass-card .mb-2').appendChild(qualitySelect);
+
+        // Load settings from localStorage
+        speedLimitInput.value = localStorage.getItem('speedLimit') || '';
+        qualitySelect.value = localStorage.getItem('defaultQuality') || 'best';
+
+        function setSpeedLimit() {
+            localStorage.setItem('speedLimit', speedLimitInput.value);
+            alert('Speed limit saved!');
+        }
+        qualitySelect.onchange = function() {
+            localStorage.setItem('defaultQuality', qualitySelect.value);
+            alert('Default quality saved!');
+        };
+
+        function getUserSettings() {
+            return {
+                speedLimit: localStorage.getItem('speedLimit') || '',
+                defaultQuality: localStorage.getItem('defaultQuality') || 'best'
+            };
+        }
+        // --- End Settings ---
+
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.id === 'selectAllPlaylist') {
+                const checked = e.target.checked;
+                document.querySelectorAll('.playlist-checkbox').forEach(cb => { cb.checked = checked; });
+            }
+        });
+
+        // Smart Clipboard Detection
+        let lastClipboardUrl = '';
+        async function checkClipboardForUrl() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text && text !== lastClipboardUrl && isSupportedVideoUrl(text)) {
+                    lastClipboardUrl = text;
+                    if (confirm('Detected a video URL in your clipboard. Paste and prepare download?\n' + text)) {
+                        const urlInput = document.getElementById('videoUrl');
+                        if (urlInput) urlInput.value = text;
+                        // Optionally auto-trigger get info
+                        // getInfoBtn.click();
+                    }
+                }
+            } catch (e) {}
+        }
+        function isSupportedVideoUrl(url) {
+            return /https?:\/\/(www\.)?(youtube|youtu\.be|instagram|tiktok|twitter|facebook|vimeo|twitch)\./i.test(url);
+        }
+        setInterval(checkClipboardForUrl, 4000);
     </script>
 </body>
 </html>

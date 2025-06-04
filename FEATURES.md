@@ -89,3 +89,53 @@
 - 📅 **Background Processing**: Continue downloads in background
 - 📅 **Custom Download Location**: User-specified download folders
 - 📅 **Advanced yt-dlp Configuration**: Fine-tuned download settings
+
+**1. Browser Extension Integration**
+- Offer a Chrome/Edge/Firefox extension for one-click downloads directly from video pages.
+
+**2. Smart Clipboard Detection**
+- Auto-detect and suggest downloads when a video URL is copied to the clipboard.
+
+**3. Video Trimming & Simple Editing**
+- Let users trim the start/end of videos before downloading.
+- Add simple video-to-GIF or video-to-audio conversion.
+
+**4. Download Scheduling**
+- Allow users to schedule downloads for later (e.g., at night or off-peak hours).
+
+**5. Download Acceleration**
+- Use multi-threaded downloads for faster speeds (if supported by backend).
+
+**6. Download Notifications**
+- Show browser or system notifications when downloads complete or fail.
+
+**7. QR Code for Mobile Download**
+- Generate a QR code for each completed download so users can scan and download directly to their phone.
+
+**8. Cloud Storage Integrations**
+- Add Dropbox, OneDrive, or Box upload options alongside Google Drive.
+
+**9. Download History Search & Filtering**
+- Let users search, filter, and sort their download history by site, date, type, or status.
+
+**10. Video Metadata Editing**
+- Allow users to edit video/audio metadata (title, artist, album, etc.) before downloading.
+
+**11. Subtitle Customization**
+- Let users select subtitle style, font, and whether to burn subtitles into the video.
+
+**12. Playlist/Batch Download Enhancements**
+- Allow users to reorder, pause, or resume individual downloads in a batch.
+
+**13. User Accounts & Sync**
+- Let users create accounts to sync settings and download history across devices.
+
+**14. Parental Controls**
+- Add content filters or parental controls for safe downloads.
+
+**15. API Access**
+- Provide an API for power users or automation (e.g., for integration with other apps).
+
+---
+
+If you want to implement any of these, let me know which ones you want to prioritize!

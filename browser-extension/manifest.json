@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "All-Sites-Downloader Button",
+  "version": "1.0",
+  "description": "Send the current page URL to your All-Sites-Downloader app for one-click video/audio download.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon.png",
+      "32": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  },
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"]
+}
