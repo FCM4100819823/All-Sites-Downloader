@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Video Downloader</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --dark-color: #343a40;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 2rem;
+            margin: 2rem auto;
+            max-width: 1200px;
+        }
+
+        .glass-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .url-input {
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .url-input:focus {
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .progress-bar-custom {
+            height: 25px;
+            border-radius: 12px;
+            background: linear-gradient(45deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+        }
+
+        .download-item {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-weight: 600;
+        }
+
+        .supported-sites {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .site-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .site-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .video-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .format-selector {
+            margin-top: 1rem;
+        }
+
+        .text-light {
+            color: #ffffff !important;
+        }
+
+        .btn-outline-light {
+            border-color: rgba(255, 255, 255, 0.5);
+            color: #ffffff;
+        }
+
+        .btn-outline-light:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { -webkit-transform: rotate(360deg); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="text-light mb-3">
+                    <i class="fas fa-download"></i>
+                    Universal Video Downloader
+                </h1>
+                <p class="text-light">Download videos from YouTube, Instagram, Twitter, TikTok, and 1000+ other sites</p>
+            </div>
+
+            <!-- Main Download Form -->
+            <div class="glass-card">
+                <div class="row">
+                    <div class="col-md-8">
+                        <input type="url" 
+                               id="videoUrl" 
+                               class="form-control url-input" 
+                               placeholder="Paste your video URL here (YouTube, Instagram, Twitter, TikTok, etc.)"
+                               aria-label="Video URL">
+                    </div>
+                    <div class="col-md-4 mt-3 mt-md-0">
+                        <div class="d-grid gap-2">
+                            <button id="getInfoBtn" class="btn btn-outline-light">
+                                <i class="fas fa-info-circle"></i> Get Info
+                            </button>
+                            <button id="downloadBtn" class="btn download-btn">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Format Selection -->
+                <div class="format-selector">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="text-light mb-2">Download Type:</label>
+                            <select id="formatType" class="form-select">
+                                <option value="video">Video (Best Quality)</option>
+                                <option value="audio">Audio Only (MP3)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Info Display -->
+            <div id="videoInfo" class="video-info"></div>
+
+            <!-- Progress Container -->
+            <div id="progressContainer" class="progress-container">
+                <div class="glass-card">
+                    <h5 class="text-light mb-3">Download Progress</h5>
+                    <div id="progressInfo" class="mb-3"></div>
+                    <div class="progress" style="height: 25px; border-radius: 12px;">
+                        <div id="progressBar" 
+                             class="progress-bar progress-bar-custom" 
+                             role="progressbar" 
+                             style="width: 0%"
+                             aria-valuenow="0" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            0%
+                        </div>
+                    </div>
+                    <div id="downloadStats" class="stats-grid mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Download History -->
+            <div class="glass-card">
+                <h5 class="text-light mb-3">
+                    <i class="fas fa-history"></i> Recent Downloads
+                </h5>
+                <div id="downloadHistory"></div>
+            </div>
+
+            <!-- Supported Sites -->
+            <div class="glass-card">
+                <h5 class="text-light mb-3">
+                    <i class="fas fa-globe"></i> Supported Platforms
+                </h5>
+                <p class="text-light">This downloader supports over 1000 websites including:</p>
+                <div class="supported-sites">
+                    <div class="site-card">
+                        <i class="fab fa-youtube text-danger fa-2x mb-2"></i>
+                        <div class="text-light">YouTube</div>
+                    </div>
+                    <div class="site-card">
+                        <i class="fab fa-instagram text-warning fa-2x mb-2"></i>
+                        <div class="text-light">Instagram</div>
+                    </div>
+                    <div class="site-card">
+                        <i class="fab fa-twitter text-info fa-2x mb-2"></i>
+                        <div class="text-light">Twitter</div>
+                    </div>
+                    <div class="site-card">
+                        <i class="fab fa-tiktok text-light fa-2x mb-2"></i>
+                        <div class="text-light">TikTok</div>
+                    </div>
+                    <div class="site-card">
+                        <i class="fab fa-facebook text-primary fa-2x mb-2"></i>
+                        <div class="text-light">Facebook</div>
+                    </div>
+                    <div class="site-card">
+                        <i class="fab fa-vimeo text-success fa-2x mb-2"></i>
+                        <div class="text-light">Vimeo</div>
+                    </div>
+                    <div class="site-card">
+                        <i class="fab fa-twitch text-purple fa-2x mb-2"></i>
+                        <div class="text-light">Twitch</div>
+                    </div>
+                    <div class="site-card">
+                        <i class="fas fa-plus fa-2x mb-2"></i>
+                        <div class="text-light">1000+ More</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-4">
+                <p class="text-light">
+                    <i class="fas fa-shield-alt"></i>
+                    Safe, fast, and free video downloading from any supported platform
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentDownloadId = null;
+        let progressInterval = null;
+
+        // DOM Elements
+        const videoUrlInput = document.getElementById('videoUrl');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const getInfoBtn = document.getElementById('getInfoBtn');
+        const formatType = document.getElementById('formatType');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressInfo = document.getElementById('progressInfo');
+        const downloadStats = document.getElementById('downloadStats');
+        const videoInfo = document.getElementById('videoInfo');
+        const downloadHistory = document.getElementById('downloadHistory');
+
+        // Event Listeners
+        downloadBtn.addEventListener('click', startDownload);
+        getInfoBtn.addEventListener('click', getVideoInfo);
+        
+        // Load download history on page load
+        loadDownloadHistory();
+
+        async function getVideoInfo() {
+            const url = videoUrlInput.value.trim();
+            if (!url) {
+                alert('Please enter a video URL');
+                return;
+            }
+
+            getInfoBtn.disabled = true;
+            getInfoBtn.innerHTML = '<span class="loading-spinner"></span> Getting Info...';
+
+            try {
+                const response = await fetch('/api/video_info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                displayVideoInfo(data);
+            } catch (error) {
+                alert('Error getting video info: ' + error.message);
+            } finally {
+                getInfoBtn.disabled = false;
+                getInfoBtn.innerHTML = '<i class="fas fa-info-circle"></i> Get Info';
+            }
+        }
+
+        function displayVideoInfo(info) {
+            const duration = info.duration ? formatDuration(info.duration) : 'Unknown';
+            const viewCount = info.view_count ? formatNumber(info.view_count) : 'Unknown';
+            
+            videoInfo.innerHTML = `
+                <div class="row">
+                    <div class="col-md-4">
+                        ${info.thumbnail ? `<img src="${info.thumbnail}" class="img-fluid rounded" alt="Thumbnail">` : ''}
+                    </div>
+                    <div class="col-md-8">
+                        <h6 class="text-light">${info.title || 'Unknown Title'}</h6>
+                        <p class="text-light mb-2">
+                            <i class="fas fa-user"></i> ${info.uploader || 'Unknown'} &nbsp;
+                            <i class="fas fa-eye"></i> ${viewCount} views &nbsp;
+                            <i class="fas fa-clock"></i> ${duration}
+                        </p>
+                        <p class="text-light small">${info.description || 'No description available'}</p>
+                        <p class="text-light small">
+                            <i class="fas fa-globe"></i> Source: ${info.website || 'Unknown'}
+                        </p>
+                    </div>
+                </div>
+            `;
+            videoInfo.style.display = 'block';
+        }
+
+        async function startDownload() {
+            const url = videoUrlInput.value.trim();
+            if (!url) {
+                alert('Please enter a video URL');
+                return;
+            }
+
+            downloadBtn.disabled = true;
+            downloadBtn.innerHTML = '<span class="loading-spinner"></span> Starting...';
+
+            try {
+                const response = await fetch('/api/start_download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        url: url,
+                        format: formatType.value
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                currentDownloadId = data.download_id;
+                showProgressContainer();
+                startProgressTracking();
+
+            } catch (error) {
+                alert('Error starting download: ' + error.message);
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
+            }
+        }
+
+        function showProgressContainer() {
+            progressContainer.style.display = 'block';
+            progressContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function startProgressTracking() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+
+            progressInterval = setInterval(updateProgress, 1000);
+            updateProgress(); // Initial call
+        }
+
+        async function updateProgress() {
+            if (!currentDownloadId) return;
+
+            try {
+                const response = await fetch(`/api/progress/${currentDownloadId}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                updateProgressDisplay(data);
+
+                if (data.completed || data.error) {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                    
+                    if (data.completed) {
+                        showDownloadComplete();
+                    }
+                    
+                    downloadBtn.disabled = false;
+                    downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
+                    loadDownloadHistory();
+                }
+
+            } catch (error) {
+                console.error('Error updating progress:', error);
+                clearInterval(progressInterval);
+                progressInterval = null;
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
+            }
+        }
+
+        function updateProgressDisplay(data) {
+            const progress = Math.round(data.progress || 0);
+            
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+            progressBar.setAttribute('aria-valuenow', progress);
+
+            let statusText = '';
+            let statusClass = 'text-info';
+
+            switch (data.status) {
+                case 'preparing':
+                    statusText = 'Preparing download...';
+                    break;
+                case 'extracting_info':
+                    statusText = 'Extracting video information...';
+                    break;
+                case 'starting_download':
+                    statusText = 'Starting download...';
+                    break;
+                case 'downloading':
+                    statusText = `Downloading: ${data.filename || 'Unknown'}`;
+                    break;
+                case 'completed':
+                    statusText = 'Download completed!';
+                    statusClass = 'text-success';
+                    break;
+                case 'error':
+                    statusText = `Error: ${data.error}`;
+                    statusClass = 'text-danger';
+                    break;
+            }
+
+            progressInfo.innerHTML = `<div class="${statusClass}">${statusText}</div>`;
+
+            // Update stats
+            if (data.status === 'downloading') {
+                const speed = data.speed ? formatBytes(data.speed) + '/s' : 'Unknown';
+                const eta = data.eta ? formatTime(data.eta) : 'Unknown';
+                const downloaded = data.downloaded ? formatBytes(data.downloaded) : '0';
+                const total = data.filesize ? formatBytes(data.filesize) : 'Unknown';
+
+                downloadStats.innerHTML = `
+                    <div class="stat-card">
+                        <div class="text-light"><i class="fas fa-tachometer-alt"></i> Speed</div>
+                        <div class="text-warning">${speed}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="text-light"><i class="fas fa-clock"></i> ETA</div>
+                        <div class="text-warning">${eta}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="text-light"><i class="fas fa-download"></i> Downloaded</div>
+                        <div class="text-warning">${downloaded} / ${total}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function showDownloadComplete() {
+            const downloadUrl = `/api/download_file/${currentDownloadId}`;
+            
+            progressInfo.innerHTML = `
+                <div class="text-success mb-3">
+                    <i class="fas fa-check-circle"></i> Download completed successfully!
+                </div>
+                <a href="${downloadUrl}" class="btn btn-success">
+                    <i class="fas fa-download"></i> Download File
+                </a>
+            `;
+        }
+
+        async function loadDownloadHistory() {
+            try {
+                const response = await fetch('/api/my_downloads');
+                const data = await response.json();
+                
+                displayDownloadHistory(data.downloads);
+            } catch (error) {
+                console.error('Error loading download history:', error);
+            }
+        }
+
+        function displayDownloadHistory(downloads) {
+            if (!downloads || downloads.length === 0) {
+                downloadHistory.innerHTML = '<p class="text-light">No recent downloads</p>';
+                return;
+            }
+
+            const historyHtml = downloads.map(download => {
+                let statusBadge = '';
+                let statusClass = '';
+                
+                switch (download.status) {
+                    case 'completed':
+                        statusBadge = '<span class="badge bg-success status-badge">Completed</span>';
+                        break;
+                    case 'downloading':
+                        statusBadge = '<span class="badge bg-primary status-badge">Downloading</span>';
+                        break;
+                    case 'error':
+                        statusBadge = '<span class="badge bg-danger status-badge">Error</span>';
+                        break;
+                    default:
+                        statusBadge = '<span class="badge bg-secondary status-badge">Processing</span>';
+                }
+
+                return `
+                    <div class="download-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-light fw-bold">${download.title || download.filename || 'Unknown'}</div>
+                                <div class="text-light small">${download.filename || ''}</div>
+                            </div>
+                            <div>
+                                ${statusBadge}
+                                ${download.completed ? `<a href="/api/download_file/${download.id}" class="btn btn-sm btn-outline-light ms-2"><i class="fas fa-download"></i></a>` : ''}
+                            </div>
+                        </div>
+                        ${download.error ? `<div class="text-danger small mt-2">${download.error}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            downloadHistory.innerHTML = historyHtml;
+        }
+
+        // Utility functions
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function formatDuration(seconds) {
+            return formatTime(seconds);
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        // Auto-paste URL if clipboard contains URL
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    const clipboardText = await navigator.clipboard.readText();
+                    if (clipboardText && (clipboardText.startsWith('http://') || clipboardText.startsWith('https://'))) {
+                        videoUrlInput.value = clipboardText;
+                    }
+                }
+            } catch (error) {
+                // Clipboard access failed, ignore
+            }
+        });
+    </script>
+</body>
+</html>
