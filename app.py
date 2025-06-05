@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify, send_file, session
 from flask_session import Session
 import yt_dlp
+from render_fixes import enhanced_yt_dlp_options  # Import the enhanced options
 from urllib.parse import urlparse
 import re
 import time
@@ -201,7 +202,7 @@ def index():
 def start_download():
     data = request.get_json()
     url = data.get('url')
-    format_type = data.get('format', 'video')  # video, audio
+    format_type = data.get('format', 'video')
     format_id = data.get('format_id')
     playlist_urls = data.get('playlist_urls')
     
@@ -216,16 +217,14 @@ def start_download():
     
     def run_download():
         progress_obj = download_progress[download_id]
-        ydl_opts = {
+        # Base yt-dlp options
+        base_opts = {
             'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s'),
             'progress_hooks': [lambda d: progress_hook(d, download_id)],
         }
-        if format_id:
-            ydl_opts['format'] = format_id
-        elif format_type == 'audio':
-            ydl_opts['format'] = 'bestaudio/best'
-        else:
-            ydl_opts['format'] = 'bestvideo+bestaudio/best'
+        # Use the enhanced options for better cloud compatibility
+        ydl_opts = enhanced_yt_dlp_options(base_opts, format_id, format_type)
+        
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 if playlist_urls:
@@ -341,7 +340,12 @@ def video_info():
     url = data.get('url')
     if not url:
         return jsonify({'error': 'No URL provided'}), 400
-    ydl_opts = {'quiet': True, 'skip_download': True}
+    
+    # Base yt-dlp options
+    base_opts = {'quiet': True, 'skip_download': True}
+    # Use the enhanced options for better cloud compatibility
+    ydl_opts = enhanced_yt_dlp_options(base_opts)
+    
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -353,8 +357,12 @@ def video_info():
                     'format_note': f.get('format_note'),
                     'resolution': f.get('resolution'),
                     'ext': f.get('ext'),
-                    'filesize': f.get('filesize')
-                } for f in formats if f.get('vcodec') != 'none' and f.get('acodec') != 'none'
+                    'filesize': f.get('filesize'),
+                    'vcodec': f.get('vcodec'),
+                    'acodec': f.get('acodec'),
+                    'fps': f.get('fps'),
+                    'abr': f.get('abr')
+                } for f in formats
             ]
             entries = []
             if 'entries' in info and info['entries']:
@@ -372,7 +380,8 @@ def video_info():
                 'website': info.get('extractor_key'),
                 'thumbnail': info.get('thumbnail'),
                 'formats': format_list,
-                'entries': entries
+                'entries': entries,
+                'subtitles': info.get('subtitles', {})
             })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

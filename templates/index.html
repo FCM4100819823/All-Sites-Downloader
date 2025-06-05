@@ -700,13 +700,15 @@
                 });
                 const data = await response.json();
                 if (data.error) {
-                    // Handle specific error cases
-                    if (data.error.includes("Video unavailable") || data.error.includes("content isn't available")) {
-                        showError('This video is unavailable. It may be private, deleted, or restricted in your region.');
+                    // Handle specific error cases with user-friendly messages
+                    if (data.error.includes("Video unavailable") || data.error.includes("This content isn't available")) {
+                        showError('This video is unavailable. It may be private, deleted, region-restricted, or age-restricted.');
                     } else if (data.error.includes("Sign in to confirm your age")) {
                         showError('This video requires age verification and cannot be downloaded.');
                     } else if (data.error.includes("This video is private")) {
                         showError('This video is private and cannot be downloaded.');
+                    } else if (data.error.includes("copyright")) {
+                        showError('This video may have been removed due to copyright claims.');
                     } else {
                         showError('Error starting download: ' + data.error);
                     }
