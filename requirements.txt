@@ -1,11 +1,15 @@
-Flask==2.3.3
-Flask-Session==0.5.0
-yt-dlp==2023.10.13
-Werkzeug==2.3.7
-Jinja2==3.1.2
+Flask==3.0.3
+Flask-Session==0.8.0
+yt-dlp==2025.4.30                 # Latest stable release
+google-api-python-client==2.169.0  # Latest stable release
+requests==2.31.0
+Werkzeug==3.0.3                    # Latest stable release
+python-dotenv==1.0.1
+Jinja2==3.1.3
 itsdangerous==2.1.2
 click==8.1.7
-MarkupSafe==2.1.3
-blinker==1.6.3
+MarkupSafe==2.1.5
+blinker==1.7.0
 cachelib==0.10.2
 gunicorn==21.2.0
+Pillow==10.2.0
