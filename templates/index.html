@@ -1315,22 +1315,27 @@
         let lastClipboardUrl = '';
         async function checkClipboardForUrl() {
             try {
-                const text = await navigator.clipboard.readText();
-                if (text && text !== lastClipboardUrl && isSupportedVideoUrl(text)) {
-                    lastClipboardUrl = text;
-                    if (confirm('Detected a video URL in your clipboard. Paste and prepare download?\n' + text)) {
-                        const urlInput = document.getElementById('videoUrl');
-                        if (urlInput) urlInput.value = text;
-                        // Optionally auto-trigger get info
-                        // getInfoBtn.click();
+                const urlInput = document.getElementById('videoUrl');
+                // Only check clipboard if the input field is empty
+                if (urlInput && !urlInput.value.trim()) {
+                    const text = await navigator.clipboard.readText();
+                    if (text && text !== lastClipboardUrl && isSupportedVideoUrl(text)) {
+                        lastClipboardUrl = text;
+                        if (confirm('Detected a video URL in your clipboard. Paste and prepare download?\n' + text)) {
+                            urlInput.value = text;
+                        }
                     }
                 }
-            } catch (e) {}
+            } catch (e) {
+                // Silently fail if clipboard access is denied
+                console.debug('Clipboard access denied');
+            }
         }
         function isSupportedVideoUrl(url) {
             return /https?:\/\/(www\.)?(youtube|youtu\.be|instagram|tiktok|twitter|facebook|vimeo|twitch)\./i.test(url);
         }
-        setInterval(checkClipboardForUrl, 4000);
+        // Check clipboard less frequently (every 10 seconds instead of 4)
+        setInterval(checkClipboardForUrl, 10000);
     </script>
 </body>
 </html>
