@@ -107,18 +107,35 @@ def download_video(url, download_id, format_type='best', max_retries=3, retry_de
                 'ignoreerrors': True,
                 'extractor_args': {
                     'youtube': {
-                        'player_client': ['android', 'web'],
+                        'player_client': ['web', 'android', 'mweb', 'tv_embedded'],
                         'player_skip': ['webpage', 'configs'],
                     }
-                }
+                },
+                'cookiesfrombrowser': ('chrome',),  # Try to use browser cookies
+                'cookiefile': 'cookies.txt',  # Fallback cookie file
+                'geo_bypass': True,  # Try to bypass geo-restrictions
+                'geo_verification_proxy': None,  # Don't use proxy for verification
+                'socket_timeout': 30,  # Increase timeout
+                'retries': 10,  # Increase retries
             }
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 progress_obj.status = 'extracting_info'
                 try:
+                    # First try to get video info without downloading
                     info = ydl.extract_info(url, download=False)
                     if info is None:
                         raise Exception("Could not extract video information")
+                    
+                    # Verify video is available
+                    if info.get('_type') == 'playlist':
+                        entries = info.get('entries', [])
+                        if not entries:
+                            raise Exception("Playlist is empty or unavailable")
+                        info = entries[0]  # Get first video from playlist
+                    
+                    if not info.get('id'):
+                        raise Exception("Video ID not found")
                     
                     # Store video info
                     progress_obj.title = info.get('title', 'Unknown')
@@ -142,14 +159,23 @@ def download_video(url, download_id, format_type='best', max_retries=3, retry_de
                     # If we get here without exception, download was successful
                     return
                 except Exception as e:
-                    if "Video unavailable" in str(e):
-                        # Try alternative extraction method
-                        ydl_opts['extractor_args']['youtube']['player_client'] = ['web', 'android']
+                    if "Video unavailable" in str(e) or "content isn't available" in str(e):
+                        # Try alternative extraction method with different options
+                        ydl_opts['extractor_args']['youtube']['player_client'] = ['mweb', 'web', 'android']
+                        ydl_opts['geo_bypass'] = True
                         with yt_dlp.YoutubeDL(ydl_opts) as ydl2:
-                            info = ydl2.extract_info(url, download=False)
-                            if info is None:
-                                raise Exception("Video is unavailable or restricted")
-                            # Continue with download...
+                            try:
+                                info = ydl2.extract_info(url, download=False)
+                                if info is None:
+                                    raise Exception("Video is unavailable or restricted")
+                                # Continue with download...
+                            except Exception as e2:
+                                # If second attempt fails, try one more time with different options
+                                ydl_opts['extractor_args']['youtube']['player_client'] = ['tv_embedded', 'web']
+                                with yt_dlp.YoutubeDL(ydl_opts) as ydl3:
+                                    info = ydl3.extract_info(url, download=False)
+                                    if info is None:
+                                        raise Exception("Video is unavailable or restricted")
                     else:
                         raise e
                 
