@@ -102,33 +102,56 @@ def download_video(url, download_id, format_type='best', max_retries=3, retry_de
                 'audioformat': 'mp3' if format_type == 'audio' else None,
                 'format': 'bestaudio/best' if format_type == 'audio' else 'bestvideo+bestaudio/best',
                 'merge_output_format': 'mp4' if format_type == 'video' else None,
+                'quiet': False,
+                'no_warnings': False,
+                'ignoreerrors': True,
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['android', 'web'],
+                        'player_skip': ['webpage', 'configs'],
+                    }
+                }
             }
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 progress_obj.status = 'extracting_info'
-                info = ydl.extract_info(url, download=False)
-                
-                # Store video info
-                progress_obj.title = info.get('title', 'Unknown')
-                progress_obj.duration = info.get('duration', 0)
-                progress_obj.uploader = info.get('uploader', 'Unknown')
-                progress_obj.view_count = info.get('view_count', 0)
-                
-                # Start download
-                progress_obj.status = 'starting_download'
-                result = ydl.download([url])
-                
-                # After download, find the actual file path
-                info = ydl.extract_info(url, download=False)
-                ext = info.get('ext', 'mp4')
-                safe_title = info.get('title', 'video')
-                filename = f"{safe_title}.{ext}"
-                file_path = os.path.join(DOWNLOAD_FOLDER, filename)
-                progress_obj.file_path = file_path
-                progress_obj.filename = filename
+                try:
+                    info = ydl.extract_info(url, download=False)
+                    if info is None:
+                        raise Exception("Could not extract video information")
+                    
+                    # Store video info
+                    progress_obj.title = info.get('title', 'Unknown')
+                    progress_obj.duration = info.get('duration', 0)
+                    progress_obj.uploader = info.get('uploader', 'Unknown')
+                    progress_obj.view_count = info.get('view_count', 0)
+                    
+                    # Start download
+                    progress_obj.status = 'starting_download'
+                    result = ydl.download([url])
+                    
+                    # After download, find the actual file path
+                    info = ydl.extract_info(url, download=False)
+                    ext = info.get('ext', 'mp4')
+                    safe_title = info.get('title', 'video')
+                    filename = f"{safe_title}.{ext}"
+                    file_path = os.path.join(DOWNLOAD_FOLDER, filename)
+                    progress_obj.file_path = file_path
+                    progress_obj.filename = filename
 
-                # If we get here without exception, download was successful
-                return
+                    # If we get here without exception, download was successful
+                    return
+                except Exception as e:
+                    if "Video unavailable" in str(e):
+                        # Try alternative extraction method
+                        ydl_opts['extractor_args']['youtube']['player_client'] = ['web', 'android']
+                        with yt_dlp.YoutubeDL(ydl_opts) as ydl2:
+                            info = ydl2.extract_info(url, download=False)
+                            if info is None:
+                                raise Exception("Video is unavailable or restricted")
+                            # Continue with download...
+                    else:
+                        raise e
                 
         except Exception as e:
             retry_count += 1

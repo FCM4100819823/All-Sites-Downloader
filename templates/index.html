@@ -699,12 +699,26 @@
                     body: JSON.stringify(body)
                 });
                 const data = await response.json();
-                if (data.error) throw new Error(data.error);
+                if (data.error) {
+                    // Handle specific error cases
+                    if (data.error.includes("Video unavailable") || data.error.includes("content isn't available")) {
+                        showError('This video is unavailable. It may be private, deleted, or restricted in your region.');
+                    } else if (data.error.includes("Sign in to confirm your age")) {
+                        showError('This video requires age verification and cannot be downloaded.');
+                    } else if (data.error.includes("This video is private")) {
+                        showError('This video is private and cannot be downloaded.');
+                    } else {
+                        showError('Error starting download: ' + data.error);
+                    }
+                    downloadBtn.disabled = false;
+                    downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
+                    return;
+                }
                 currentDownloadId = data.download_id;
                 showProgressContainer();
                 startProgressTracking();
             } catch (error) {
-                alert('Error starting download: ' + error.message);
+                showError('Error starting download: ' + error.message);
                 downloadBtn.disabled = false;
                 downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
             }
@@ -1150,7 +1164,34 @@
         }
 
         function showError(message) {
-            alert(message);
+            // Create a more visible error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            // Insert after the video info section
+            const videoInfo = document.getElementById('videoInfo');
+            if (videoInfo) {
+                videoInfo.parentNode.insertBefore(errorDiv, videoInfo.nextSibling);
+            } else {
+                // If no video info section, insert after the main download form
+                const mainForm = document.querySelector('.glass-card');
+                if (mainForm) {
+                    mainForm.parentNode.insertBefore(errorDiv, mainForm.nextSibling);
+                }
+            }
+
+            // Auto-dismiss after 10 seconds
+            setTimeout(() => {
+                const alert = document.querySelector('.alert');
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 10000);
         }
 
         // Utility functions
