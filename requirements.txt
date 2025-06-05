@@ -13,3 +13,5 @@ blinker==1.7.0
 cachelib==0.10.2
 gunicorn==21.2.0
 Pillow==10.2.0
+oauth2client
+oauth2client
